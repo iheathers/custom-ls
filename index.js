@@ -1,31 +1,47 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+const util = require('util');
 
-fs.readdir(process.cwd(), (err, files) => {
+// const lstat = fs.promises.lstat;
+// console.dir({ lstat });
+
+fs.readdir(process.cwd(), async (err, files) => {
   if (err) {
     throw new ReferenceError(err);
   }
 
-  let statArray = Array(files.length).fill(null);
+  // Note: Turns out that forEach works differently on async / await functions
 
-  files.forEach((file, index) => {
+  // files.forEach(async (file, index) => {
+  //   const fileType = await lstat(file, index);
+  //   console.log({ fileType });
+  // });
+
+  for (const file of files) {
+    try {
+      const filetype = await lstat(file);
+      console.log(filetype);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+});
+
+// Method 1
+const lstat = (file) => {
+  return new Promise((resolve, reject) => {
+    console.log({ file });
     fs.lstat(file, (err, stats) => {
       if (err) {
-        throw new ReferenceError(err);
-      }
-
-      statArray[index] = stats;
-
-      const ready = statArray.every((stats) => {
-        return stats;
-      });
-
-      if (ready) {
-        statArray.forEach((stats, index) => {
-          console.log(files[index], stats.isFile());
-        });
+        reject(err);
+      } else {
+        resolve({ [file]: stats.isFile() });
       }
     });
   });
-});
+};
+
+// Method 2
+// const lstat = util.promisify(fs.lstat);
+// console.log(lstat);
