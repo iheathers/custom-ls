@@ -11,21 +11,28 @@ fs.readdir(process.cwd(), async (err, files) => {
     throw new ReferenceError(err);
   }
 
-  const statArray = Array(files.length).fill(null);
+  const statPromises = files.map((file) => lstat(file));
+  const stats = await Promise.all(statPromises);
 
-  for (const [index, file] of files.entries()) {
-    statArray[index] = lstat(file);
-  }
+  stats.forEach((stat, index) => {
+    console.log(files[index], stat.isFile());
+  });
 
-  const awaitedArray = await Promise.all(statArray);
+  // const statArray = Array(files.length).fill(null);
 
-  const ready = awaitedArray.every((item) => item !== null);
+  // for (const [index, file] of files.entries()) {
+  //   statArray[index] = lstat(file);
+  // }
 
-  console.log(awaitedArray);
+  // const awaitedArray = await Promise.all(statArray);
 
-  if (ready) {
-    console.log('file', files[2], ' statObj ', awaitedArray[2].isFile());
-  }
+  // const ready = awaitedArray.every((item) => item !== null);
+
+  // console.log(awaitedArray);
+
+  // if (ready) {
+  //   console.log('file', files[2], ' statObj ', awaitedArray[2].isFile());
+  // }
   // Note: Turns out that forEach works differently on async / await functions
 
   // files.forEach(async (file, index) => {
